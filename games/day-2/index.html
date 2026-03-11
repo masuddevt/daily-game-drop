@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2 - Memory Match</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%);
+            color: #00ff88;
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .day-label {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px;
+            color: #ff006e;
+            text-shadow: 0 0 10px #ff006e;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 28px;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 15px 25px;
+            border-radius: 5px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            color: #00ff88;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f3460 100%);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+            user-select: none;
+            position: relative;
+        }
+
+        .card:hover:not(.matched):not(.flipped) {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            border-color: #00ffff;
+        }
+
+        .card.flipped {
+            background: linear-gradient(135deg, #16c784 0%, #00ff88 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            border-color: #00ff88;
+        }
+
+        .card.matched {
+            background: linear-gradient(135deg, #16c784 0%, #00ff88 100%);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.9);
+            border-color: #00ff88;
+            cursor: default;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .card-emoji {
+            opacity: 0;
+            font-size: 45px;
+            transition: opacity 0.2s;
+        }
+
+        .card.flipped .card-emoji,
+        .card.matched .card-emoji {
+            opacity: 1;
+        }
+
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: opacity 0.2s;
+        }
+
+        .card.flipped .card-back,
+        .card.matched .card-back {
+            opacity: 0;
+        }
+
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .game-over.active {
+            display: flex;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f3460 100%);
+            border: 3px solid #ff006e;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.5);
+            max-width: 400px;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-over-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px;
+            color: #ff006e;
+            text-shadow: 0 0 20px #ff006e;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .game-over-stats {
+            margin: 20px 0;
+            color: #00ff88;
+        }
+
+        .game-over-stat-line {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            color: #00ffff;
+        }
+
+        .game-over-score {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            margin: 20px 0;
+        }
+
+        .button {
+            font-family: 'Press Start 2P', cursive;
+            padding: 12px 30px;
+            font-size: 14px;
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .button:hover {
+            background: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            transform: scale(1.05);
+        }
+
+        .button.secondary {
+            border-color: #ff006e;
+            color: #ff006e;
+            background: rgba(255, 0, 110, 0.1);
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+        }
+
+        .button.secondary:hover {
+            background: rgba(255, 0, 110, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 480px) {
+            .day-label {
+                font-size: 18px;
+            }
+
+            .title {
+                font-size: 20px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+
+            .card {
+                font-size: 32px;
+            }
+
+            .card-emoji {
+                font-size: 36px;
+            }
+
+            .stat-box {
+                padding: 10px 15px;
+                min-width: 100px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .button {
+                padding: 10px 20px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="day-label">DAY 2</div>
+            <div class="title">MEMORY MATCH</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Pairs Found</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Moves</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="timer">0s</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="button" onclick="handleResetGame()">New Game</button>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOverModal">
+        <div class="game-over-content">
+            <div class="game-over-title">GAME COMPLETE!</div>
+            <div class="game-over-stats">
+                <div class="game-over-stat-line">Pairs Matched: <span id="finalScore">0</span></div>
+                <div class="game-over-stat-line">Total Moves: <span id="finalMoves">0</span></div>
+                <div class="game-over-stat-line">Time Taken: <span id="finalTime">0s</span></div>
+            </div>
+            <div class="game-over-score" id="finalRating">GREAT!</div>
+            <button class="button" onclick="handlePlayAgain()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const emojis = ['🎮', '🎮', '🎨', '🎨', '🎭', '🎭', '🎪', '🎪', 
+                        '🎸', '🎸', '🎺', '🎺', '🎻', '🎻', '🎯', '🎯'];
+
+        let gameState = {
+            cards: [],
+            flipped: [],
+            matched: [],
+            moves: 0,
+            score: 0,
+            gameActive: true,
+            startTime: null,
+            timerInterval: null,
+            canFlip: true
+        };
+
+        function initializeGame() {
+            gameState.cards = emojis.sort(() => Math.random() - 0.5);
+            gameState.flipped = [];
+            gameState.matched = [];
+            gameState.moves = 0;
+            gameState.score = 0;
+            gameState.gameActive = true;
+            gameState.canFlip = true;
+            gameState.startTime = Date.now();
+
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+
+            startTimer();
+            renderBoard();
+            updateStats();
+        }
+
+        function renderBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+
+            gameState.cards.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.id = `card-${index}`;
+
+                if (gameState.matched.includes(index)) {
+                    card.classList.add('matched');
+                }
+
+                if (gameState.flipped.includes(index)) {
+                    card.classList.add('flipped');
+                }
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-emoji">${emoji}</div>
+                        <div class="card-back">?</div>
+                    </div>
+                `;
+
+                card.onclick = () => handleCardClick(index);
+                gameBoard.appendChild(card);
+            });
+        }
+
+        function handleCardClick(index) {
+            if (!gameState.gameActive || !gameState.canFlip) return;
+            if (gameState.flipped.includes(index)) return;
+            if (gameState.matched.includes(index)) return;
+
+            gameState.flipped.push(index);
+            renderBoard();
+
+            if (gameState.flipped.length === 2) {
+                gameState.canFlip = false;
+                gameState.moves++;
+                updateStats();
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = gameState.flipped;
+            const isMatch = gameState.cards[first] === gameState.cards[second];
+
+            setTimeout(() => {
+                if (isMatch) {
+                    gameState.matched.push(first, second);
+                    gameState.score++;
+                    gameState.flipped = [];
+                    gameState.canFlip = true;
+                    updateStats();
+                    renderBoard();
+
+                    if (gameState.matched.length === gameState.cards.length) {
+                        endGame();
+                    }
+                } else {
+                    gameState.flipped = [];
+                    gameState.canFlip = true;
+                    renderBoard();
+                }
+            }, 600);
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('moves').textContent = gameState.moves;
+        }
+
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                document.getElementById('timer').textContent = elapsed + 's';
+            }, 100);
+        }
+
+        function endGame() {
+            gameState.gameActive = false;
+            clearInterval(gameState.timerInterval);
+
+            const finalTime =
