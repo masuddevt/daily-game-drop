@@ -1,0 +1,33 @@
+name: 🎮 Daily Game Generator
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-game:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 🎮 Generate today's game
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node generate-game.js
+      - name: 📤 Commit and push new game
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "Daily Game Bot 🤖"
+          git add .
+          git diff --staged --quiet || git commit -m "🎮 Day $(node -e 'const g=require(\"./games.json\"); console.log(g.length)'): $(node -e 'const g=require(\"./games.json\"); console.log(g[g.length-1].title)')"
+          git push
