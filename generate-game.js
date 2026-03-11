@@ -48,19 +48,24 @@ const prompt = `Create a complete, fully playable browser game for Day ${dayNumb
 
 Game concept: ${concept}
 
-Requirements:
-- Single HTML file with all CSS and JavaScript inline
-- Fun, polished, and complete — actually playable from start to finish
-- Include a score counter where relevant
-- Include a "Play Again" button after game over
-- Dark theme matching a retro arcade aesthetic (#0a0a0f background, neon accents)
-- Use Google Font "Press Start 2P" for headings/score, "Share Tech Mono" for body
-- Show "DAY ${dayNumber}" and the game title at the top
+STRICT REQUIREMENTS:
+- Single HTML file with ALL CSS and JavaScript inline — no external dependencies except Google Fonts
+- Must work perfectly when opened directly in a browser with no server
+- Use only vanilla JavaScript — no libraries, no modules, no import/export
+- All game logic must be self-contained and complete — no missing functions
+- Every single function that is called anywhere in onclick, addEventListener, or anywhere else MUST be fully defined in the script — never call a function that is not defined
+- Never reference a variable before it is declared
+- Include a visible score counter
+- Include a "Play Again" button after game over that fully resets and restarts the game
+- Dark background (#0a0a0f), neon accent colors
+- Use Google Fonts: Press Start 2P for headings, Share Tech Mono for body
+- Show "DAY ${dayNumber}" at the top
 - Mobile friendly where possible
-- No external game libraries — pure HTML/CSS/JS only
-- Make it genuinely fun and satisfying to play
+- Mentally trace through the entire code before writing — make sure every function exists and the game runs without any errors
 
-Return ONLY the complete HTML file content, nothing else. No explanation, no markdown, no code blocks — just raw HTML starting with <!DOCTYPE html>.`;
+CRITICAL: Every function called anywhere in onclick, addEventListener or any event must be fully defined in the script. Double-check that startGame, resetGame, and any other functions are all defined before returning.
+
+Return ONLY raw HTML starting with <!DOCTYPE html>. No explanation, no markdown, no code fences, nothing else.`;
 
 // ─── Call Claude API ──────────────────────────────────────────────────────────
 function callClaude(prompt) {
